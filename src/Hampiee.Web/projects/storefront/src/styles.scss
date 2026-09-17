@@ -1,0 +1,144 @@
+/* ══════════════════════════════════════════════════════════════════
+   Hampiee Design System — Global Styles
+   Font imports + CSS custom properties + base component styles
+════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Custom Properties ────────────────────────────────────────── */
+:root {
+  --color-primary: #1a1a2e;
+  --color-gold: #c9a96e;
+  --color-ceylon: #2d6a4f;
+  --color-surface: #fafaf8;
+  --color-text: #1a1a2e;
+  --color-text-muted: #6b7280;
+  --color-border: rgba(26, 26, 46, 0.12);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --radius-card: 1.25rem;
+  --shadow-card: 0 4px 24px -4px rgba(26, 26, 46, 0.12);
+  --shadow-hover: 0 12px 40px -8px rgba(26, 26, 46, 0.25);
+  --shadow-gold: 0 4px 20px -4px rgba(201, 169, 110, 0.4);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-body);
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  ::selection {
+    background: #f5e4b1;
+    color: #1a1a2e;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-medium text-sm transition-all duration-200 select-none cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn rounded-full bg-navy-900 text-white hover:bg-navy-800 active:scale-95;
+    box-shadow: 0 2px 12px rgba(26, 26, 46, 0.2);
+  }
+  .btn-gold {
+    @apply btn rounded-full bg-gold-500 text-white hover:bg-gold-600 active:scale-95;
+  }
+  .btn-ghost {
+    @apply btn rounded-full border border-navy-900 text-navy-900 hover:bg-navy-900 hover:text-white;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-2xl overflow-hidden transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* Form */
+  .form-input {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-navy-900 placeholder-gray-400 text-sm focus:border-gold-500 focus:ring-2 focus:ring-gold-200 focus:outline-none transition-all duration-200;
+  }
+  .form-label {
+    @apply block text-sm font-medium text-navy-700 mb-1;
+  }
+
+  /* Section */
+  .section {
+    @apply py-16 md:py-24;
+  }
+  .section-title {
+    @apply font-display text-3xl md:text-4xl text-navy-900 mb-3;
+  }
+  .container-hampiee {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Skeleton */
+  .skeleton {
+    @apply relative overflow-hidden bg-gray-100 rounded-xl;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 25%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+}
+
+/* Material overrides */
+.mat-mdc-dialog-container {
+  border-radius: 1.25rem !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 169, 110, 0.4);
+  border-radius: 50rem;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c9a96e;
+}
+
+/* PayHere form hidden */
+#payhere-form {
+  display: none !important;
+}

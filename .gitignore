@@ -1,0 +1,59 @@
+# .NET Build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.dbmdl
+*.jfm
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Environment & Secrets
+**/appsettings.Development.json
+**/.env
+**/.env.*
+!**/.env.example
+
+# EF Core migrations (keep these in git)
+# !**/Migrations/
+
+# Angular / Node
+src/Hampiee.Web/node_modules/
+src/Hampiee.Web/dist/
+src/Hampiee.Web/.angular/
+src/Hampiee.Web/.cache/
+
+# Docker
+docker-compose.override.yml
+
+# Uploads
+src/Hampiee.API/wwwroot/uploads/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Rider / VS Code
+.idea/
+.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# Coverage
+coverage/
+TestResults/
+
+# Terraform state
+infra/**/*.tfstate
+infra/**/*.tfstate.*
+infra/**/.terraform/

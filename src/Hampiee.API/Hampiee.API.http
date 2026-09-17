@@ -1,0 +1,6 @@
+@Hampiee.API_HostAddress = http://localhost:5113
+
+GET {{Hampiee.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
