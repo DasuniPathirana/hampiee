@@ -1,18 +1,14 @@
 using Hampiee.API.Middleware;
-using Hampiee.Infrastructure.Payments;
+using Hampiee.Infrastructure;
 using Hampiee.Infrastructure.Persistence;
-using Hampiee.Application.Services;
-using Hampiee.Infrastructure.Email;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.OpenApi.Models;
-using SendGrid.Extensions.DependencyInjection;
 
 // Bootstrap Serilog early
 Log.Logger = new LoggerConfiguration()
@@ -32,10 +28,8 @@ try
            .Enrich.FromLogContext()
            .WriteTo.Console());
 
-    // ─── Database ───────────────────────────────────────────────────────────────
-    builder.Services.AddDbContext<HampieeDbContext>(opts =>
-        opts.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
-            npg => npg.MigrationsAssembly("Hampiee.Infrastructure")));
+    // ─── Infrastructure (DB, Repos, Cache, Payment, Email, Storage) ─────────────
+    builder.Services.AddInfrastructure(builder.Configuration);
 
     // ─── Identity ───────────────────────────────────────────────────────────────
     builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(opts =>

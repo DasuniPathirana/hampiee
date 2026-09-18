@@ -1,12 +1,23 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { NavbarComponent } from './components/navbar/navbar.component';
+import { FooterComponent } from './components/footer/footer.component';
+import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
 
 @Component({
-  imports: [RouterOutlet],
   selector: 'app-root',
-  styleUrl: './app.scss',
-  templateUrl: './app.html',
+  standalone: true,
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, CartDrawerComponent],
+  template: `
+    <app-navbar />
+    <app-cart-drawer />
+    <main>
+      <router-outlet />
+    </main>
+    <app-footer />
+  `,
+  styles: [`main { min-height: calc(100vh - 4rem); }`]
 })
 export class App {
-  protected readonly title = signal('storefront');
+  title = 'Hampiee';
 }
