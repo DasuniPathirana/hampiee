@@ -15,8 +15,6 @@ packages/
 
 # Environment & Secrets
 **/appsettings.Development.json
-**/.env
-**/.env.*
 !**/.env.example
 
 # EF Core migrations (keep these in git)
@@ -45,7 +43,6 @@ desktop.ini
 
 # Rider / VS Code
 .idea/
-.vscode/settings.json
 !.vscode/extensions.json
 !.vscode/launch.json
 
@@ -57,3 +54,5 @@ TestResults/
 infra/**/*.tfstate
 infra/**/*.tfstate.*
 infra/**/.terraform/
+config.bat
+node_modules

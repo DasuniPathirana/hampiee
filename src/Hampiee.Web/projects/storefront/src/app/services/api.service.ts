@@ -22,6 +22,7 @@ export interface Product {
   discountPercentage?: number;
   brand?: string;
   sku?: string;
+  weightGrams?: number;
   createdAt?: string;
 }
 

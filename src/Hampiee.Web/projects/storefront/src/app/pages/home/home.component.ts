@@ -44,7 +44,11 @@ interface OccasionCard {
 
         <!-- Heading -->
         <h1 class="font-display text-5xl md:text-7xl font-bold mb-6 animate-slide-up text-white leading-tight">
-          {{ heroCms()?.title || 'Gift with Soul,<br>Gift with Lanka' }}
+          @if (heroCms()?.title) {
+            {{ heroCms()!.title }}
+          } @else {
+            Gift with Soul,<br>Gift with Lanka
+          }
         </h1>
 
         <!-- Sub -->

@@ -392,10 +392,10 @@ export class CheckoutComponent implements OnInit {
     'Moneragala', 'Ratnapura', 'Kegalle'
   ];
 
-  orderTotal = () => cart: any => {
+  orderTotal(): number {
     const deliveryFee = this.zoneInfo()?.deliveryFee ?? 0;
     return this.cart.subTotal() + deliveryFee - this.discountAmount;
-  };
+  }
 
   ngOnInit() {
     if (this.cart.isEmpty()) this.router.navigate(['/cart']);
