@@ -56,7 +56,7 @@ import { AuthService } from '../../../services/auth.service';
                 </button>
               </div>
               <!-- Password strength -->
-              @if (form.get('password')?.value?.length > 0) {
+              @if ((form.get('password')?.value || '').length > 0) {
                 <div class="mt-1.5 flex gap-1">
                   @for (bar of [1,2,3,4]; track bar) {
                     <div class="flex-1 h-1 rounded-full transition-colors"

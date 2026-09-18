@@ -104,17 +104,32 @@
     text-decoration: none;
   }
   .btn-primary {
-    @apply btn rounded-full bg-navy-900 text-white hover:bg-navy-800;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 500; font-size: 0.875rem;
+    transition: all var(--transition-base); cursor: pointer; user-select: none;
+    text-decoration: none; border-radius: var(--radius-pill);
+    background-color: var(--color-navy-900); color: white; border: none;
     box-shadow: 0 2px 12px rgba(26, 26, 46, 0.2);
+    &:hover { background-color: var(--color-navy-800); }
     &:active { transform: scale(0.97); }
   }
   .btn-gold {
-    @apply btn rounded-full bg-gold-500 text-white hover:bg-gold-600;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 500; font-size: 0.875rem;
+    transition: all var(--transition-base); cursor: pointer; user-select: none;
+    text-decoration: none; border-radius: var(--radius-pill);
+    background-color: var(--color-gold-500); color: white; border: none;
     box-shadow: var(--shadow-gold);
+    &:hover { background-color: var(--color-gold-600); }
     &:active { transform: scale(0.97); }
   }
   .btn-ghost {
-    @apply btn rounded-full border border-navy-900 text-navy-900 hover:bg-navy-900 hover:text-white;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 500; font-size: 0.875rem;
+    transition: all var(--transition-base); cursor: pointer; user-select: none;
+    text-decoration: none; border-radius: var(--radius-pill);
+    background: transparent; color: var(--color-navy-900); border: 2px solid var(--color-navy-900);
+    &:hover { background-color: var(--color-navy-900); color: white; }
   }
 
   .card {
