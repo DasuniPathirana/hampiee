@@ -48,7 +48,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> GetFeaturedAsync(int count = 8, CancellationToken ct = default)
         => await _set.Where(p => p.IsFeatured && p.IsActive)
-                     .Include(p => p.Images).OrderBy(p => p.DisplayOrder)
+                     .Include(p => p.Images).OrderByDescending(p => p.CreatedAt)
                      .Take(count).AsNoTracking().ToListAsync(ct);
 
     public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(
@@ -75,7 +75,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
             "price-asc"  => q.OrderBy(p => p.Price),
             "price-desc" => q.OrderByDescending(p => p.Price),
             "name"       => q.OrderBy(p => p.Name),
-            "featured"   => q.OrderBy(p => p.DisplayOrder).ThenByDescending(p => p.IsFeatured),
+            "featured"   => q.OrderByDescending(p => p.IsFeatured).ThenByDescending(p => p.CreatedAt),
             _            => q.OrderByDescending(p => p.CreatedAt) // "newest"
         };
 
@@ -95,7 +95,7 @@ public class HamperRepository : Repository<Hamper>, IHamperRepository
 
     public async Task<IEnumerable<Hamper>> GetFeaturedAsync(int count = 8, CancellationToken ct = default)
         => await _set.Where(h => h.IsFeatured && h.IsActive)
-                     .Include(h => h.Images).OrderBy(h => h.DisplayOrder)
+                     .Include(h => h.Images).OrderByDescending(h => h.CreatedAt)
                      .Take(count).AsNoTracking().ToListAsync(ct);
 
     public async Task<(IEnumerable<Hamper> Items, int TotalCount)> GetPagedAsync(
@@ -106,7 +106,7 @@ public class HamperRepository : Repository<Hamper>, IHamperRepository
         if (minPrice.HasValue) q = q.Where(h => h.OverridePrice >= minPrice || h.OverridePrice == null);
         if (maxPrice.HasValue) q = q.Where(h => h.OverridePrice <= maxPrice || h.OverridePrice == null);
         var total = await q.CountAsync(ct);
-        var items = await q.OrderBy(h => h.DisplayOrder).Skip((page - 1) * pageSize).Take(pageSize).AsNoTracking().ToListAsync(ct);
+        var items = await q.OrderByDescending(h => h.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize).AsNoTracking().ToListAsync(ct);
         return (items, total);
     }
 }

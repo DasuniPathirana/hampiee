@@ -127,9 +127,16 @@ public static class DatabaseSeeder
         };
 
         var entities = zones.Select((z, i) => {
-            var zone = DeliveryZone.Create(z.Name, z.Districts, z.BasePrice, z.IsSameDay);
+            // Parse estimated days from the string, e.g. "1-2 Days" -> min=1, max=2
+            var dayParts = z.EstimatedDelivery.Split('-', ' ');
+            int daysMin = 1, daysMax = 3;
+            if (dayParts.Length >= 2 && int.TryParse(dayParts[0], out var d1) && int.TryParse(dayParts[1], out var d2))
+            { daysMin = d1; daysMax = d2; }
+            else if (int.TryParse(dayParts[0], out var d)) { daysMin = daysMax = d; }
+
+            var zone = DeliveryZone.Create(z.Name, z.Districts, z.BasePrice, daysMin, daysMax);
             typeof(DeliveryZone).GetProperty("FreeDeliveryThreshold")?.SetValue(zone, z.FreeThreshold);
-            typeof(DeliveryZone).GetProperty("EstimatedDelivery")?.SetValue(zone, z.EstimatedDelivery);
+            typeof(DeliveryZone).GetProperty("IsSameDay")?.SetValue(zone, z.IsSameDay);
             typeof(DeliveryZone).GetProperty("DisplayOrder")?.SetValue(zone, i);
             return zone;
         }).ToList();
