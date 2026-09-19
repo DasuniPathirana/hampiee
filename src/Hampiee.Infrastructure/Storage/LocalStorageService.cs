@@ -1,43 +1,41 @@
 using Hampiee.Application.Services;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 
 namespace Hampiee.Infrastructure.Storage;
 
-/// <summary>Local filesystem storage for development</summary>
+/// <summary>Local filesystem storage for development — stores files in wwwroot/uploads</summary>
 public class LocalStorageService : IStorageService
 {
-    private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _config;
+    private readonly string _rootPath;
 
-    public LocalStorageService(IWebHostEnvironment env, IConfiguration config)
+    public LocalStorageService(IConfiguration config)
     {
-        _env = env;
         _config = config;
+        // Default to wwwroot under working directory if not configured
+        _rootPath = config["Storage:LocalPath"] ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
     }
 
     public async Task<string> UploadAsync(Stream stream, string fileName, string contentType,
         string folder = "products", CancellationToken ct = default)
     {
-        var uploadsPath = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", folder);
+        var uploadsPath = Path.Combine(_rootPath, "uploads", folder);
         Directory.CreateDirectory(uploadsPath);
 
-        var filePath = Path.Combine(uploadsPath, fileName);
-        var dir = Path.GetDirectoryName(filePath)!;
-        Directory.CreateDirectory(dir);
+        var safeName = Path.GetFileName(fileName); // prevent path traversal
+        var filePath = Path.Combine(uploadsPath, safeName);
 
         using var fileStream = File.Create(filePath);
         await stream.CopyToAsync(fileStream, ct);
 
-        return GetPublicUrl($"uploads/{folder}/{fileName}");
+        return GetPublicUrl($"uploads/{folder}/{safeName}");
     }
 
     public Task DeleteAsync(string url, CancellationToken ct = default)
     {
-        // Extract relative path and delete file
         var baseUrl = _config["Storage:BaseUrl"] ?? "";
-        var relativePath = url.Replace(baseUrl + "/", "");
-        var fullPath = Path.Combine(_env.WebRootPath ?? "wwwroot", relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var relativePath = url.Replace(baseUrl + "/", "").Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.Combine(_rootPath, relativePath);
         if (File.Exists(fullPath)) File.Delete(fullPath);
         return Task.CompletedTask;
     }
