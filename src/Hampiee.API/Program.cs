@@ -8,7 +8,8 @@ using Serilog;
 using Serilog.Events;
 using System.Text;
 using System.Threading.RateLimiting;
-using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
+
 
 // Bootstrap Serilog early
 Log.Logger = new LoggerConfiguration()
@@ -73,26 +74,15 @@ try
     // ─── Rate Limiting ───────────────────────────────────────────────────────────
     builder.Services.AddRateLimiter(opts =>
     {
-        opts.AddFixedWindowLimiter("api", cfg =>
-        {
-            cfg.Window = TimeSpan.FromMinutes(1);
-            cfg.PermitLimit = 100;
-            cfg.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            cfg.QueueLimit = 10;
-        });
-
-        opts.AddFixedWindowLimiter("auth", cfg =>
-        {
-            cfg.Window = TimeSpan.FromMinutes(5);
-            cfg.PermitLimit = 10;
-        });
-
-        opts.AddFixedWindowLimiter("payment-notify", cfg =>
-        {
-            cfg.Window = TimeSpan.FromMinutes(1);
-            cfg.PermitLimit = 50;
-        });
-
+        opts.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+            System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+                ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+                {
+                    Window = TimeSpan.FromMinutes(1),
+                    PermitLimit = 100,
+                    QueueLimit = 0
+                }));
         opts.RejectionStatusCode = 429;
     });
 
@@ -112,53 +102,25 @@ try
 
     // ─── MediatR ────────────────────────────────────────────────────────────────
     builder.Services.AddMediatR(cfg =>
-        cfg.RegisterServicesFromAssemblyContaining<Hampiee.Application.AssemblyReference>());
+        cfg.RegisterServicesFromAssembly(typeof(Hampiee.Application.AssemblyReference).Assembly));
 
-    // ─── Application Services ────────────────────────────────────────────────────
-    builder.Services.AddHttpClient<PayHerePaymentService>();
-    builder.Services.AddScoped<IPaymentService, PayHerePaymentService>();
+    // ─── Infrastructure (DB, Redis, Payments, Email, Storage) ───────────────────
+    builder.Services.AddInfrastructure(builder.Configuration);
 
-    builder.Services.AddSendGrid(opts =>
-        opts.ApiKey = builder.Configuration["SendGrid:ApiKey"] ?? "");
-    builder.Services.AddScoped<IEmailService, SendGridEmailService>();
-
-    // ─── Cache (Redis) ───────────────────────────────────────────────────────────
-    builder.Services.AddStackExchangeRedisCache(opts =>
-        opts.Configuration = builder.Configuration.GetConnectionString("Redis"));
-
-    // ─── SignalR (real-time order tracking) ─────────────────────────────────────
+    // ─── SignalR ─────────────────────────────────────────────────────────────────
     builder.Services.AddSignalR();
 
     // ─── Controllers + Swagger ──────────────────────────────────────────────────
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+    // Simple Swagger docs - JWT can be added manually in UI via Authorize button
     builder.Services.AddSwaggerGen(c =>
     {
-        c.SwaggerDoc("v1", new OpenApiInfo
-        {
-            Title = "Hampiee API",
-            Version = "v1",
-            Description = "Premium Sri Lankan Gifting Platform API"
-        });
-        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Type = SecuritySchemeType.Http,
-            Scheme = "bearer",
-            BearerFormat = "JWT",
-            Description = "Enter JWT token"
-        });
-        c.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
-            {
-                new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
-                []
-            }
-        });
+        c.SwaggerDoc("v1", new() { Title = "Hampiee API", Version = "v1" });
     });
 
     // ─── Health Checks ───────────────────────────────────────────────────────────
-    builder.Services.AddHealthChecks()
-        .AddDbContextCheck<HampieeDbContext>("database");
+    builder.Services.AddHealthChecks();
 
     var app = builder.Build();
 

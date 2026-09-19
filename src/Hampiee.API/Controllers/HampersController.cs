@@ -1,9 +1,8 @@
+using Hampiee.Application.Services;
 using Hampiee.Domain.Entities;
 using Hampiee.Domain.Repositories;
-using Hampiee.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Hampiee.API.Controllers;
 
@@ -61,10 +60,10 @@ public class HampersController : ControllerBase
     [Authorize(Policy = "StaffOrAdmin")]
     public async Task<IActionResult> Create([FromBody] HamperRequest req, CancellationToken ct = default)
     {
-        var hamper = Hamper.Create(req.Name, req.Slug, req.ShortDescription);
-        hamper.Update(req.Name, req.Slug, req.ShortDescription, req.Description,
-            req.HeroImageUrl, req.OverridePrice, req.CategoryId, req.IsCustomizable,
-            req.IsFeatured, req.DisplayOrder);
+        var hamper = Hamper.Create(req.Name, req.Slug, req.Description ?? "", req.ShortDescription, req.IsCustomizable, req.CategoryId);
+        if (req.OverridePrice.HasValue) hamper.SetOverridePrice(req.OverridePrice);
+        if (req.IsFeatured) hamper.SetFeatured(true);
+        if (!req.IsActive) hamper.Deactivate();
 
         await _hampers.AddAsync(hamper, ct);
         await _hampers.SaveChangesAsync(ct);
@@ -79,9 +78,10 @@ public class HampersController : ControllerBase
         var hamper = await _hampers.GetByIdAsync(id, ct);
         if (hamper == null) return NotFound();
 
-        hamper.Update(req.Name, req.Slug, req.ShortDescription, req.Description,
-            req.HeroImageUrl, req.OverridePrice, req.CategoryId, req.IsCustomizable,
-            req.IsFeatured, req.DisplayOrder);
+        // Hamper uses individual methods rather than a single Update()
+        if (req.OverridePrice.HasValue) hamper.SetOverridePrice(req.OverridePrice);
+        hamper.SetFeatured(req.IsFeatured);
+        if (req.IsActive) hamper.Activate(); else hamper.Deactivate();
 
         _hampers.Update(hamper);
         await _hampers.SaveChangesAsync(ct);
@@ -89,11 +89,24 @@ public class HampersController : ControllerBase
         return Ok(MapToResponse(hamper));
     }
 
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
+    {
+        var hamper = await _hampers.GetByIdAsync(id, ct);
+        if (hamper == null) return NotFound();
+        hamper.Deactivate();
+        _hampers.Update(hamper);
+        await _hampers.SaveChangesAsync(ct);
+        await _cache.RemoveByPatternAsync("hampers:*", ct);
+        return NoContent();
+    }
+
     private static object MapToResponse(Hamper h) => new
     {
         h.Id, h.Name, h.Slug, h.ShortDescription, h.HeroImageUrl,
         Price = h.CalculatedPrice([]),
-        h.CompareAtPrice, h.IsCustomizable, h.IsFeatured, h.CategoryId,
+        h.IsCustomizable, h.IsFeatured, h.IsActive, h.CategoryId,
         Images = h.Images.Select(i => new { i.Url, i.AltText })
     };
 
@@ -101,7 +114,7 @@ public class HampersController : ControllerBase
     {
         h.Id, h.Name, h.Slug, h.ShortDescription, h.Description, h.HeroImageUrl,
         Price = h.CalculatedPrice([]),
-        h.CompareAtPrice, h.IsCustomizable, h.IsFeatured, h.CategoryId,
+        h.IsCustomizable, h.IsFeatured, h.IsActive, h.CategoryId,
         Images = h.Images.Select(i => new { i.Url, i.AltText }),
         Items = h.Items.Select(i => new { i.ProductId, i.Quantity, i.IsSwappable })
     };
@@ -110,7 +123,7 @@ public class HampersController : ControllerBase
 public record HamperRequest(
     string Name, string Slug, string ShortDescription, string? Description,
     string? HeroImageUrl, decimal? OverridePrice, Guid? CategoryId,
-    bool IsCustomizable, bool IsFeatured, int DisplayOrder);
+    bool IsCustomizable, bool IsFeatured, bool IsActive, int DisplayOrder = 0);
 
 // ─── Categories Controller ──────────────────────────────────────────────────
 
@@ -152,11 +165,8 @@ public class CategoriesController : ControllerBase
         await _categories.AddAsync(cat, ct);
         await _categories.SaveChangesAsync(ct);
         await _cache.RemoveAsync("categories:all", ct);
-        return CreatedAtAction(null, new { slug = cat.Slug }, cat);
+        return Ok(new { cat.Id, cat.Name, cat.Slug });
     }
 }
 
 public record CategoryRequest(string Name, string Slug, Guid? ParentId);
-
-// ICacheService reference (already defined in CmsController.cs, using partial pattern here)
-// Note: This uses the interface from Application.Services namespace
